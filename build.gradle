@@ -124,6 +124,25 @@ allprojects {
 }
 
 subprojects {
+  plugins.withType(JavaPlugin).configureEach {
+    java {
+      toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+      }
+    }
+  }
+  tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+  }
+
+  // Optional safety net
+  tasks.withType(Test).configureEach {
+    javaLauncher.set(javaToolchains.launcherFor {
+      languageVersion.set(JavaLanguageVersion.of(17))
+    })
+  }
+
   if (it.name == 'iceberg-bom') {
     // the BOM does not build anything, the code below expects "source code"
     return
@@ -189,7 +208,7 @@ subprojects {
 
   tasks.withType(JavaCompile.class).configureEach {
     options.encoding = "UTF-8"
-    options.release = 11
+    //options.release = 11
   }
 
   javadoc {
@@ -246,6 +265,13 @@ subprojects {
       targetCompatibility = "11"
       scalaCompileOptions.additionalParameters.add("-release:11")
     }
+  }
+
+}
+
+tasks.create("listProjects") {
+  doLast {
+    subprojects.forEach { println(it.name) }
   }
 }
 
@@ -337,6 +363,11 @@ project(':iceberg-core') {
   test {
     useJUnitPlatform()
   }
+
+  configurations {
+    agentDependencies
+  }
+
   dependencies {
     api project(':iceberg-api')
     implementation project(':iceberg-common')
@@ -372,7 +403,36 @@ project(':iceberg-core') {
       exclude group: 'junit'
     }
     testImplementation libs.awaitility
+
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+
+    agentDependencies "org.mpisws:jmc:0.1.0"
+    agentDependencies "org.mpisws:jmc-agent:0.1.0"
+
+    implementation "org.mpisws:jmc:0.1.0"
+    testImplementation "org.mpisws:jmc:0.1.0"
   }
+
+  tasks.register("copyJar", Copy) {
+    from(configurations.agentDependencies.filter { it.name.contains("jmc-0.1.0") })
+    into("src/main/resources/lib")
+  }
+
+  tasks.processResources {
+    dependsOn("copyJar")
+  }
+
+  tasks.withType(Test).configureEach {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.0") }?.absolutePath
+
+    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=org.apache.iceberg"
+    jvmArgs(agentArg)
+  }
+
+
 }
 
 project(':iceberg-data') {
