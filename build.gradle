@@ -124,25 +124,6 @@ allprojects {
 }
 
 subprojects {
-  plugins.withType(JavaPlugin).configureEach {
-    java {
-      toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-      }
-    }
-  }
-  tasks.withType(JavaCompile).configureEach {
-    sourceCompatibility = "17"
-    targetCompatibility = "17"
-  }
-
-  // Optional safety net
-  tasks.withType(Test).configureEach {
-    javaLauncher.set(javaToolchains.launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(17))
-    })
-  }
-
   if (it.name == 'iceberg-bom') {
     // the BOM does not build anything, the code below expects "source code"
     return
@@ -368,6 +349,7 @@ project(':iceberg-core') {
     agentDependencies
   }
 
+
   dependencies {
     api project(':iceberg-api')
     implementation project(':iceberg-common')
@@ -428,9 +410,10 @@ project(':iceberg-core') {
     useJUnitPlatform()
     def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.0") }?.absolutePath
 
-    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=org.apache.iceberg"
+    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=org.apache.iceberg,excludedPackages=org.apache.iceberg.relocated"
     jvmArgs(agentArg)
   }
+
 
 
 }
@@ -786,6 +769,10 @@ project(':iceberg-hive-metastore') {
     useJUnitPlatform()
   }
 
+//  configurations {
+//    agentDependencies
+//  }
+
   dependencies {
     implementation project(path: ':iceberg-bundled-guava', configuration: 'shadow')
     implementation project(':iceberg-core')
@@ -854,7 +841,32 @@ project(':iceberg-hive-metastore') {
     testImplementation project(path: ':iceberg-api', configuration: 'testArtifacts')
     testImplementation project(path: ':iceberg-core', configuration: 'testArtifacts')
     testImplementation libs.awaitility
+
+//    agentDependencies "org.mpisws:jmc:0.1.0"
+//    agentDependencies "org.mpisws:jmc-agent:0.1.0"
+//
+//    implementation "org.mpisws:jmc:0.1.0"
+//    testImplementation "org.mpisws:jmc:0.1.0"
   }
+
+//  tasks.register("copyJar", Copy) {
+//    from(configurations.agentDependencies.filter { it.name.contains("jmc-0.1.0") })
+//    into("src/main/resources/lib")
+//  }
+//
+//  tasks.processResources {
+//    dependsOn("copyJar")
+//  }
+//
+//  tasks.withType(Test).configureEach {
+//    // Use JUnit Platform for unit tests.
+//    useJUnitPlatform()
+//    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.0") }?.absolutePath
+//
+//    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=,org.apache.iceberg.api,org.apache.iceberg.core,org.apache.iceberg.hive-metastore"
+//    jvmArgs(agentArg)
+//  }
+
 }
 
 project(':iceberg-orc') {

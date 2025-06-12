@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -50,6 +51,8 @@ import org.apache.iceberg.util.Tasks;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+
 
 public class TestJdbcTableConcurrency {
 
@@ -61,11 +64,23 @@ public class TestJdbcTableConcurrency {
 
   @TempDir private File tableDir;
 
+
+
   @Test
+  @JmcCheckConfiguration(
+          numIterations = 10
+  )
   public synchronized void testConcurrentFastAppends() throws IOException {
     Map<String, String> properties = Maps.newHashMap();
-    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDir.getAbsolutePath());
-    String sqliteDb = "jdbc:sqlite:" + tableDir.getAbsolutePath() + "concurentFastAppend.db";
+
+    //using a manual tempDir instead of @TempDir
+    File tableDirA = java.nio.file.Files.createTempDirectory("iceberg-test").toFile();
+
+    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDirA.getAbsolutePath());
+    String sqliteDb = "jdbc:sqlite:" + tableDirA.getAbsolutePath() + "concurentFastAppend.db";
+
+    tableDirA.deleteOnExit();
+
     properties.put(CatalogProperties.URI, sqliteDb);
     JdbcCatalog catalog = new JdbcCatalog();
     catalog.setConf(new Configuration());
@@ -110,10 +125,20 @@ public class TestJdbcTableConcurrency {
   }
 
   @Test
+  @JmcCheckConfiguration(
+          numIterations = 10
+  )
   public synchronized void testConcurrentConnections() throws InterruptedException, IOException {
     Map<String, String> properties = Maps.newHashMap();
-    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDir.getAbsolutePath());
-    String sqliteDb = "jdbc:sqlite:" + tableDir.getAbsolutePath() + "concurentConnections.db";
+
+    //using a manual tempDir instead of @TempDir
+    File tableDirA = java.nio.file.Files.createTempDirectory("iceberg-test").toFile();
+
+    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDirA.getAbsolutePath());
+    String sqliteDb = "jdbc:sqlite:" + tableDirA.getAbsolutePath() + "concurentConnections.db";
+
+    tableDirA.deleteOnExit();
+
     properties.put(CatalogProperties.URI, sqliteDb);
     JdbcCatalog catalog = new JdbcCatalog();
     catalog.setConf(new Configuration());
