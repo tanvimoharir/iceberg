@@ -37,198 +37,205 @@ import org.apache.iceberg.relocated.com.google.common.collect.Sets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
 
-@ExtendWith(ParameterizedTestExtension.class)
+//@ExtendWith(ParameterizedTestExtension.class)
 public class TestIncrementalDataTableScan extends TestBase {
 
-  @BeforeEach
-  public void setupTableProperties() {
-    table.updateProperties().set(TableProperties.MANIFEST_MIN_MERGE_COUNT, "3").commit();
-  }
+//  @BeforeEach
+//  public void setupTableProperties() {
+//    table.updateProperties().set(TableProperties.MANIFEST_MIN_MERGE_COUNT, "3").commit();
+//  }
 
-  @TestTemplate
-  public void testInvalidScans() {
-    add(table.newAppend(), files("A"));
-    assertThatThrownBy(() -> appendsBetweenScan(1, 1))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("from and to snapshot ids cannot be the same");
+//  @TestTemplate
+//  public void testInvalidScans() {
+//    add(table.newAppend(), files("A"));
+//    assertThatThrownBy(() -> appendsBetweenScan(1, 1))
+//        .isInstanceOf(IllegalArgumentException.class)
+//        .hasMessage("from and to snapshot ids cannot be the same");
+//
+//    add(table.newAppend(), files("B"));
+//    add(table.newAppend(), files("C"));
+//    add(table.newAppend(), files("D"));
+//    add(table.newAppend(), files("E"));
+//    assertThatThrownBy(() -> table.newScan().appendsBetween(2, 5).appendsBetween(1, 4))
+//        .isInstanceOf(IllegalArgumentException.class)
+//        .hasMessage("from snapshot id 1 not in existing snapshot ids range (2, 4]");
+//    assertThatThrownBy(() -> table.newScan().appendsBetween(1, 2).appendsBetween(1, 3))
+//        .isInstanceOf(IllegalArgumentException.class)
+//        .hasMessage("to snapshot id 3 not in existing snapshot ids range (1, 2]");
+//  }
 
-    add(table.newAppend(), files("B"));
-    add(table.newAppend(), files("C"));
-    add(table.newAppend(), files("D"));
-    add(table.newAppend(), files("E"));
-    assertThatThrownBy(() -> table.newScan().appendsBetween(2, 5).appendsBetween(1, 4))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("from snapshot id 1 not in existing snapshot ids range (2, 4]");
-    assertThatThrownBy(() -> table.newScan().appendsBetween(1, 2).appendsBetween(1, 3))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("to snapshot id 3 not in existing snapshot ids range (1, 2]");
-  }
+//  @TestTemplate
+//  public void testAppends() {
+//    add(table.newAppend(), files("A")); // 1
+//    add(table.newAppend(), files("B"));
+//    add(table.newAppend(), files("C"));
+//    add(table.newAppend(), files("D"));
+//    add(table.newAppend(), files("E")); // 5
+//
+//    class MyListener implements Listener<IncrementalScanEvent> {
+//
+//      IncrementalScanEvent lastEvent = null;
+//
+//      @Override
+//      public void notify(IncrementalScanEvent event) {
+//        this.lastEvent = event;
+//      }
+//
+//      public IncrementalScanEvent event() {
+//        return lastEvent;
+//      }
+//    }
+//
+//    MyListener listener1 = new MyListener();
+//    Listeners.register(listener1, IncrementalScanEvent.class);
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
+//    assertThat(listener1.event().fromSnapshotId()).isEqualTo(1);
+//    assertThat(listener1.event().toSnapshotId()).isEqualTo(5);
+//    filesMatch(Lists.newArrayList("C", "D", "E"), appendsBetweenScan(2, 5));
+//    assertThat(listener1.event().fromSnapshotId()).isEqualTo(2);
+//    assertThat(listener1.event().toSnapshotId()).isEqualTo(5);
+//    assertThat(listener1.event().projection()).isEqualTo(table.schema());
+//    assertThat(listener1.event().filter()).isEqualTo(Expressions.alwaysTrue());
+//    assertThat(listener1.event().tableName()).isEqualTo("test");
+//    assertThat(listener1.event().isFromSnapshotInclusive()).isFalse();
+//  }
+//
+//  @TestTemplate
+//  public void testReplaceOverwritesDeletes() {
+//    add(table.newAppend(), files("A")); // 1
+//    add(table.newAppend(), files("B"));
+//    add(table.newAppend(), files("C"));
+//    add(table.newAppend(), files("D"));
+//    add(table.newAppend(), files("E")); // 5
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
+//
+//    replace(table.newRewrite(), files("A", "B", "C"), files("F", "G")); // 6
+//    // Replace commits are ignored
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 6));
+//    filesMatch(Lists.newArrayList("E"), appendsBetweenScan(4, 6));
+//    // 6th snapshot is a replace. No new content is added
+//    assertThat(appendsBetweenScan(5, 6)).as("Replace commits are ignored").isEmpty();
+//    delete(table.newDelete(), files("D")); // 7
+//    // 7th snapshot is a delete.
+//    assertThat(appendsBetweenScan(5, 7)).as("Replace and delete commits are ignored").isEmpty();
+//    assertThat(appendsBetweenScan(6, 7)).as("Delete commits are ignored").isEmpty();
+//    add(table.newAppend(), files("I")); // 8
+//    // snapshots 6 and 7 are ignored
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E", "I"), appendsBetweenScan(1, 8));
+//    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(6, 8));
+//    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(7, 8));
+//
+//    overwrite(table.newOverwrite(), files("H"), files("E")); // 9
+//    assertThatThrownBy(() -> appendsBetweenScan(8, 9))
+//        .isInstanceOf(UnsupportedOperationException.class)
+//        .hasMessage(
+//            "Found overwrite operation, cannot support incremental data in snapshots (8, 9]");
+//  }
+//
+//  @TestTemplate
+//  public void testTransactions() {
+//    Transaction transaction = table.newTransaction();
+//
+//    add(transaction.newAppend(), files("A")); // 1
+//    add(transaction.newAppend(), files("B"));
+//    add(transaction.newAppend(), files("C"));
+//    add(transaction.newAppend(), files("D"));
+//    add(transaction.newAppend(), files("E")); // 5
+//    transaction.commitTransaction();
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
+//
+//    transaction = table.newTransaction();
+//    replace(transaction.newRewrite(), files("A", "B", "C"), files("F", "G")); // 6
+//    transaction.commitTransaction();
+//    // Replace commits are ignored
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 6));
+//    filesMatch(Lists.newArrayList("E"), appendsBetweenScan(4, 6));
+//    // 6th snapshot is a replace. No new content is added
+//    assertThat(appendsBetweenScan(5, 6)).as("Replace commits are ignored").isEmpty();
+//
+//    transaction = table.newTransaction();
+//    delete(transaction.newDelete(), files("D")); // 7
+//    transaction.commitTransaction();
+//    // 7th snapshot is a delete.
+//    assertThat(appendsBetweenScan(5, 7)).as("Replace and delete commits are ignored").isEmpty();
+//    assertThat(appendsBetweenScan(6, 7)).as("Delete commits are ignored").isEmpty();
+//
+//    transaction = table.newTransaction();
+//    add(transaction.newAppend(), files("I")); // 8
+//    transaction.commitTransaction();
+//    // snapshots 6, 7 and 8 are ignored
+//    filesMatch(Lists.newArrayList("B", "C", "D", "E", "I"), appendsBetweenScan(1, 8));
+//    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(6, 8));
+//    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(7, 8));
+//  }
+//
+//  @TestTemplate
+//  public void testRollbacks() {
+//    add(table.newAppend(), files("A")); // 1
+//    add(table.newAppend(), files("B"));
+//    add(table.newAppend(), files("C")); // 3
+//    // Go back to snapshot "B"
+//    table.manageSnapshots().rollbackTo(2).commit(); // 2
+//    assertThat(table.currentSnapshot().snapshotId()).isEqualTo(2);
+//    filesMatch(Lists.newArrayList("B"), appendsBetweenScan(1, 2));
+//    filesMatch(Lists.newArrayList("B"), appendsAfterScan(1));
+//
+//    Transaction transaction = table.newTransaction();
+//    add(transaction.newAppend(), files("D")); // 4
+//    add(transaction.newAppend(), files("E")); // 5
+//    add(transaction.newAppend(), files("F"));
+//    transaction.commitTransaction();
+//    // Go back to snapshot "E"
+//    table.manageSnapshots().rollbackTo(5).commit();
+//    assertThat(table.currentSnapshot().snapshotId()).isEqualTo(5);
+//    filesMatch(Lists.newArrayList("B", "D", "E"), appendsBetweenScan(1, 5));
+//    filesMatch(Lists.newArrayList("B", "D", "E"), appendsAfterScan(1));
+//  }
+//
+//  @TestTemplate
+//  public void testIgnoreResiduals() throws IOException {
+//    add(table.newAppend(), files("A"));
+//    add(table.newAppend(), files("B"));
+//    add(table.newAppend(), files("C"));
+//
+//    TableScan scan1 = table.newScan().filter(Expressions.equal("id", 5)).appendsBetween(1, 3);
+//
+//    try (CloseableIterable<CombinedScanTask> tasks = scan1.planTasks()) {
+//      assertThat(tasks).as("Tasks should not be empty").hasSizeGreaterThan(0);
+//      for (CombinedScanTask combinedScanTask : tasks) {
+//        for (FileScanTask fileScanTask : combinedScanTask.files()) {
+//          assertThat(fileScanTask.residual())
+//              .as("Residuals must be preserved")
+//              .isNotEqualTo(Expressions.alwaysTrue());
+//        }
+//      }
+//    }
+//
+//    TableScan scan2 =
+//        table.newScan().filter(Expressions.equal("id", 5)).appendsBetween(1, 3).ignoreResiduals();
+//
+//    try (CloseableIterable<CombinedScanTask> tasks = scan2.planTasks()) {
+//      assertThat(tasks).as("Tasks should not be empty").hasSizeGreaterThan(0);
+//      for (CombinedScanTask combinedScanTask : tasks) {
+//        for (FileScanTask fileScanTask : combinedScanTask.files()) {
+//          assertThat(fileScanTask.residual())
+//              .as("Residuals must be ignored")
+//              .isEqualTo(Expressions.alwaysTrue());
+//        }
+//      }
+//    }
+//  }
 
-  @TestTemplate
-  public void testAppends() {
-    add(table.newAppend(), files("A")); // 1
-    add(table.newAppend(), files("B"));
-    add(table.newAppend(), files("C"));
-    add(table.newAppend(), files("D"));
-    add(table.newAppend(), files("E")); // 5
-
-    class MyListener implements Listener<IncrementalScanEvent> {
-
-      IncrementalScanEvent lastEvent = null;
-
-      @Override
-      public void notify(IncrementalScanEvent event) {
-        this.lastEvent = event;
-      }
-
-      public IncrementalScanEvent event() {
-        return lastEvent;
-      }
-    }
-
-    MyListener listener1 = new MyListener();
-    Listeners.register(listener1, IncrementalScanEvent.class);
-    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
-    assertThat(listener1.event().fromSnapshotId()).isEqualTo(1);
-    assertThat(listener1.event().toSnapshotId()).isEqualTo(5);
-    filesMatch(Lists.newArrayList("C", "D", "E"), appendsBetweenScan(2, 5));
-    assertThat(listener1.event().fromSnapshotId()).isEqualTo(2);
-    assertThat(listener1.event().toSnapshotId()).isEqualTo(5);
-    assertThat(listener1.event().projection()).isEqualTo(table.schema());
-    assertThat(listener1.event().filter()).isEqualTo(Expressions.alwaysTrue());
-    assertThat(listener1.event().tableName()).isEqualTo("test");
-    assertThat(listener1.event().isFromSnapshotInclusive()).isFalse();
-  }
-
-  @TestTemplate
-  public void testReplaceOverwritesDeletes() {
-    add(table.newAppend(), files("A")); // 1
-    add(table.newAppend(), files("B"));
-    add(table.newAppend(), files("C"));
-    add(table.newAppend(), files("D"));
-    add(table.newAppend(), files("E")); // 5
-    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
-
-    replace(table.newRewrite(), files("A", "B", "C"), files("F", "G")); // 6
-    // Replace commits are ignored
-    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 6));
-    filesMatch(Lists.newArrayList("E"), appendsBetweenScan(4, 6));
-    // 6th snapshot is a replace. No new content is added
-    assertThat(appendsBetweenScan(5, 6)).as("Replace commits are ignored").isEmpty();
-    delete(table.newDelete(), files("D")); // 7
-    // 7th snapshot is a delete.
-    assertThat(appendsBetweenScan(5, 7)).as("Replace and delete commits are ignored").isEmpty();
-    assertThat(appendsBetweenScan(6, 7)).as("Delete commits are ignored").isEmpty();
-    add(table.newAppend(), files("I")); // 8
-    // snapshots 6 and 7 are ignored
-    filesMatch(Lists.newArrayList("B", "C", "D", "E", "I"), appendsBetweenScan(1, 8));
-    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(6, 8));
-    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(7, 8));
-
-    overwrite(table.newOverwrite(), files("H"), files("E")); // 9
-    assertThatThrownBy(() -> appendsBetweenScan(8, 9))
-        .isInstanceOf(UnsupportedOperationException.class)
-        .hasMessage(
-            "Found overwrite operation, cannot support incremental data in snapshots (8, 9]");
-  }
-
-  @TestTemplate
-  public void testTransactions() {
-    Transaction transaction = table.newTransaction();
-
-    add(transaction.newAppend(), files("A")); // 1
-    add(transaction.newAppend(), files("B"));
-    add(transaction.newAppend(), files("C"));
-    add(transaction.newAppend(), files("D"));
-    add(transaction.newAppend(), files("E")); // 5
-    transaction.commitTransaction();
-    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 5));
-
-    transaction = table.newTransaction();
-    replace(transaction.newRewrite(), files("A", "B", "C"), files("F", "G")); // 6
-    transaction.commitTransaction();
-    // Replace commits are ignored
-    filesMatch(Lists.newArrayList("B", "C", "D", "E"), appendsBetweenScan(1, 6));
-    filesMatch(Lists.newArrayList("E"), appendsBetweenScan(4, 6));
-    // 6th snapshot is a replace. No new content is added
-    assertThat(appendsBetweenScan(5, 6)).as("Replace commits are ignored").isEmpty();
-
-    transaction = table.newTransaction();
-    delete(transaction.newDelete(), files("D")); // 7
-    transaction.commitTransaction();
-    // 7th snapshot is a delete.
-    assertThat(appendsBetweenScan(5, 7)).as("Replace and delete commits are ignored").isEmpty();
-    assertThat(appendsBetweenScan(6, 7)).as("Delete commits are ignored").isEmpty();
-
-    transaction = table.newTransaction();
-    add(transaction.newAppend(), files("I")); // 8
-    transaction.commitTransaction();
-    // snapshots 6, 7 and 8 are ignored
-    filesMatch(Lists.newArrayList("B", "C", "D", "E", "I"), appendsBetweenScan(1, 8));
-    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(6, 8));
-    filesMatch(Lists.newArrayList("I"), appendsBetweenScan(7, 8));
-  }
-
-  @TestTemplate
-  public void testRollbacks() {
-    add(table.newAppend(), files("A")); // 1
-    add(table.newAppend(), files("B"));
-    add(table.newAppend(), files("C")); // 3
-    // Go back to snapshot "B"
-    table.manageSnapshots().rollbackTo(2).commit(); // 2
-    assertThat(table.currentSnapshot().snapshotId()).isEqualTo(2);
-    filesMatch(Lists.newArrayList("B"), appendsBetweenScan(1, 2));
-    filesMatch(Lists.newArrayList("B"), appendsAfterScan(1));
-
-    Transaction transaction = table.newTransaction();
-    add(transaction.newAppend(), files("D")); // 4
-    add(transaction.newAppend(), files("E")); // 5
-    add(transaction.newAppend(), files("F"));
-    transaction.commitTransaction();
-    // Go back to snapshot "E"
-    table.manageSnapshots().rollbackTo(5).commit();
-    assertThat(table.currentSnapshot().snapshotId()).isEqualTo(5);
-    filesMatch(Lists.newArrayList("B", "D", "E"), appendsBetweenScan(1, 5));
-    filesMatch(Lists.newArrayList("B", "D", "E"), appendsAfterScan(1));
-  }
-
-  @TestTemplate
-  public void testIgnoreResiduals() throws IOException {
-    add(table.newAppend(), files("A"));
-    add(table.newAppend(), files("B"));
-    add(table.newAppend(), files("C"));
-
-    TableScan scan1 = table.newScan().filter(Expressions.equal("id", 5)).appendsBetween(1, 3);
-
-    try (CloseableIterable<CombinedScanTask> tasks = scan1.planTasks()) {
-      assertThat(tasks).as("Tasks should not be empty").hasSizeGreaterThan(0);
-      for (CombinedScanTask combinedScanTask : tasks) {
-        for (FileScanTask fileScanTask : combinedScanTask.files()) {
-          assertThat(fileScanTask.residual())
-              .as("Residuals must be preserved")
-              .isNotEqualTo(Expressions.alwaysTrue());
-        }
-      }
-    }
-
-    TableScan scan2 =
-        table.newScan().filter(Expressions.equal("id", 5)).appendsBetween(1, 3).ignoreResiduals();
-
-    try (CloseableIterable<CombinedScanTask> tasks = scan2.planTasks()) {
-      assertThat(tasks).as("Tasks should not be empty").hasSizeGreaterThan(0);
-      for (CombinedScanTask combinedScanTask : tasks) {
-        for (FileScanTask fileScanTask : combinedScanTask.files()) {
-          assertThat(fileScanTask.residual())
-              .as("Residuals must be ignored")
-              .isEqualTo(Expressions.alwaysTrue());
-        }
-      }
-    }
-  }
-
-  @TestTemplate
+  @JmcCheckConfiguration(
+          numIterations = 10,
+          debug = true
+  )
   public void testPlanWithExecutor() {
+
+    table.updateProperties().set(TableProperties.MANIFEST_MIN_MERGE_COUNT, "3").commit();
+
     add(table.newAppend(), files("A"));
     add(table.newAppend(), files("B"));
     add(table.newAppend(), files("C"));

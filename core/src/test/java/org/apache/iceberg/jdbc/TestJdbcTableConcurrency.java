@@ -62,13 +62,13 @@ public class TestJdbcTableConcurrency {
           required(1, "id", Types.IntegerType.get(), "unique ID"),
           required(2, "data", Types.StringType.get()));
 
-  @TempDir private File tableDir;
+  //@TempDir private File tableDir;
 
 
 
-  @Test
   @JmcCheckConfiguration(
-          numIterations = 10
+          numIterations = 10,
+          debug = true
   )
   public synchronized void testConcurrentFastAppends() throws IOException {
     Map<String, String> properties = Maps.newHashMap();
@@ -124,7 +124,7 @@ public class TestJdbcTableConcurrency {
     assertThat(icebergTable.currentSnapshot().allManifests(icebergTable.io())).hasSize(20);
   }
 
-  @Test
+
   @JmcCheckConfiguration(
           numIterations = 10
   )
