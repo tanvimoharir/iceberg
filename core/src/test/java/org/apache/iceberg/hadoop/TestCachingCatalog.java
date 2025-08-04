@@ -49,7 +49,7 @@ import org.apache.iceberg.util.FakeTicker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 public class TestCachingCatalog extends HadoopTableTestBase {
 

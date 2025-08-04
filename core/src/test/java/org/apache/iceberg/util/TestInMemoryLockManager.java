@@ -33,8 +33,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
-import org.mpisws.jmc.annotations.JmcTimeout;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcTimeout;
 
 //@JmcTimeout(value = 5)
 public class TestInMemoryLockManager {

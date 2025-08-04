@@ -389,28 +389,21 @@ project(':iceberg-core') {
     testImplementation libs.junit.jupiter
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-    agentDependencies "org.mpisws:jmc:0.1.0"
-    agentDependencies "org.mpisws:jmc-agent:0.1.0"
+    agentDependencies "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
+    agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.1-SNAPSHOT"
 
-    implementation "org.mpisws:jmc:0.1.0"
-    testImplementation "org.mpisws:jmc:0.1.0"
+    implementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
+    testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
   }
 
-  tasks.register("copyJar", Copy) {
-    from(configurations.agentDependencies.filter { it.name.contains("jmc-0.1.0") })
-    into("src/main/resources/lib")
-  }
-
-  tasks.processResources {
-    dependsOn("copyJar")
-  }
 
   tasks.withType(Test).configureEach {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
-    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.0") }?.absolutePath
+    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.1") }?.absolutePath
+    def libraryJar = configurations.agentDependencies.find { it.name.contains("jmc-0.1.1") }?.absolutePath
 
-    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=org.apache.iceberg,excludedPackages=org.apache.iceberg.relocated"
+    def agentArg = "-javaagent:$agentJar=debug,instrumentingPackages=org.apache.iceberg,excludedPackages=org.apache.iceberg.relocated,jmcRuntimeJarPath=$libraryJar"
     jvmArgs(agentArg)
   }
 
@@ -842,11 +835,11 @@ project(':iceberg-hive-metastore') {
     testImplementation project(path: ':iceberg-core', configuration: 'testArtifacts')
     testImplementation libs.awaitility
 
-    agentDependencies "org.mpisws:jmc:0.1.0"
-    agentDependencies "org.mpisws:jmc-agent:0.1.0"
+    agentDependencies "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
+    agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.1-SNAPSHOT"
 
-    implementation "org.mpisws:jmc:0.1.0"
-    testImplementation "org.mpisws:jmc:0.1.0"
+    implementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
+    testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
   }
 
   tasks.register("copyJar", Copy) {

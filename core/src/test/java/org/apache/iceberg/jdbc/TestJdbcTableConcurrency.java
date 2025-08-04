@@ -51,7 +51,8 @@ import org.apache.iceberg.util.Tasks;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcCheck;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 
 public class TestJdbcTableConcurrency {
@@ -66,6 +67,7 @@ public class TestJdbcTableConcurrency {
 
 
 
+  @JmcCheck
   @JmcCheckConfiguration(
           numIterations = 10,
           debug = true

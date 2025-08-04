@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 
 public class TestHiveTableConcurrency extends HiveTableBaseTest {
 
-@Test
+  @Test
   public synchronized void testConcurrentFastAppends() {
     Table icebergTable = catalog.loadTable(TABLE_IDENTIFIER);
 
