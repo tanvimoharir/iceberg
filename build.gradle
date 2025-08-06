@@ -396,6 +396,9 @@ project(':iceberg-core') {
     testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
   }
 
+  tasks.processResources {
+    dependsOn("copyJar")
+  }
 
   tasks.withType(Test).configureEach {
     // Use JUnit Platform for unit tests.
@@ -835,11 +838,11 @@ project(':iceberg-hive-metastore') {
     testImplementation project(path: ':iceberg-core', configuration: 'testArtifacts')
     testImplementation libs.awaitility
 
-    agentDependencies "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
-    agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.1-SNAPSHOT"
+    agentDependencies "org.mpisws:jmc:0.1.0"
+    agentDependencies "org.mpisws:jmc-agent:0.1.0"
 
-    implementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
-    testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
+    implementation "org.mpisws:jmc:0.1.0"
+    testImplementation "org.mpisws:jmc:0.1.0"
   }
 
   tasks.register("copyJar", Copy) {

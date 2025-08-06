@@ -52,7 +52,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
-@ExtendWith(ParameterizedTestExtension.class)
+//@ExtendWith(ParameterizedTestExtension.class)
 public class TestBase {
   // Schema passed to create tables
   public static final Schema SCHEMA =
@@ -192,18 +192,19 @@ public class TestBase {
 
   static final FileIO FILE_IO = new TestTables.LocalFileIO();
 
-  @TempDir protected Path temp;
-
-  @TempDir protected File tableDir = null;
+//  @TempDir protected Path temp;
+//
+//  @TempDir protected File tableDir = null;
   protected File metadataDir = null;
   public TestTables.TestTable table = null;
-
-  @Parameters(name = "formatVersion = {0}")
+//
+//  @Parameters(name = "formatVersion = {0}")
   protected static List<Integer> formatVersions() {
     return ALL_VERSIONS;
   }
-
-  @Parameter protected int formatVersion;
+//
+//  @Parameter
+  protected int formatVersion;
 
   @SuppressWarnings("checkstyle:MemberName")
   protected TableAssertions V1Assert;
@@ -211,7 +212,7 @@ public class TestBase {
   @SuppressWarnings("checkstyle:MemberName")
   protected TableAssertions V2Assert;
 
-  @BeforeEach
+//  @BeforeEach
   public void setupTable() throws Exception {
     this.V1Assert = new TableAssertions(1, formatVersion);
     this.V2Assert = new TableAssertions(2, formatVersion);
@@ -219,7 +220,7 @@ public class TestBase {
     this.table = create(SCHEMA, SPEC);
   }
 
-  @AfterEach
+//  @AfterEach
   public void cleanupTables() {
     TestTables.clearTables();
   }
@@ -236,6 +237,27 @@ public class TestBase {
                     !name.startsWith("snap")
                         && Files.getFileExtension(name).equalsIgnoreCase("avro")));
   }
+
+  protected static final Path temp = createTempPath();
+  protected static final File tableDir = createTableDir();
+
+  private static Path createTempPath() {
+    try {
+      Path p = java.nio.file.Files.createTempDirectory("jmc-temp");
+      p.toFile().deleteOnExit();
+      return p;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static File createTableDir() {
+    File f = new File("/tmp/fake-dir-" + System.nanoTime());
+    f.mkdirs();
+    f.deleteOnExit();
+    return f;
+  }
+
 
   List<File> listManifestLists(File tableDirToList) {
     return Lists.newArrayList(

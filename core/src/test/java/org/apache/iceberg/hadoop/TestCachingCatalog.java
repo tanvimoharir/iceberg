@@ -46,10 +46,7 @@ import org.apache.iceberg.exceptions.NoSuchTableException;
 import org.apache.iceberg.relocated.com.google.common.collect.ImmutableMap;
 import org.apache.iceberg.relocated.com.google.common.collect.Lists;
 import org.apache.iceberg.util.FakeTicker;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
 
 public class TestCachingCatalog extends HadoopTableTestBase {
 
