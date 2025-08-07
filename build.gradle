@@ -407,8 +407,6 @@ project(':iceberg-core') {
     jvmArgs(agentArg)
   }
 
-
-
 }
 
 project(':iceberg-data') {
@@ -835,31 +833,9 @@ project(':iceberg-hive-metastore') {
     testImplementation project(path: ':iceberg-core', configuration: 'testArtifacts')
     testImplementation libs.awaitility
 
-    agentDependencies "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
-    agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.1-SNAPSHOT"
-
     implementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
     testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
   }
-
-  tasks.register("copyJar", Copy) {
-    from(configurations.agentDependencies.filter { it.name.contains("jmc-0.1.0") })
-    into("src/main/resources/lib")
-  }
-
-  tasks.processResources {
-    dependsOn("copyJar")
-  }
-
-  tasks.withType(Test).configureEach {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.0") }?.absolutePath
-
-    def agentArg = "-javaagent:${agentJar}=debug,instrumentingPackages=org.apache.iceberg-bundled-guava; org.apache.iceberg-core; org.apache.iceberg-api;org.apache.iceberg-common;org.apache.iceberg-hive-metastore,excludedPackages=org.apache.log4j;org.apache.logging.log4j;org.apache.hadoop;org.datanucleus;org.pentaho;org.apache.hbase;co.cask.tephra;com.tdunning;org.eclipse.jetty;javax.transaction;com.zaxxer"
-    jvmArgs(agentArg)
-  }
-
 }
 
 project(':iceberg-orc') {
