@@ -49,11 +49,8 @@ import org.apache.iceberg.relocated.com.google.common.util.concurrent.MoreExecut
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.util.Tasks;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.mpi_sws.jmc.annotations.JmcCheck;
-import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
-
+import org.mpisws.jmc.annotations.JmcCheck;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
 
 public class TestJdbcTableConcurrency {
 
@@ -63,7 +60,7 @@ public class TestJdbcTableConcurrency {
           required(1, "id", Types.IntegerType.get(), "unique ID"),
           required(2, "data", Types.StringType.get()));
 
-  //@TempDir private File tableDir;
+  // @TempDir private File tableDir;
 
 
 

@@ -18,25 +18,13 @@
  */
 package org.apache.iceberg;
 
-import static org.apache.iceberg.types.Types.NestedField.required;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assumptions.assumeThat;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.iceberg.expressions.Expression;
-import org.apache.iceberg.expressions.Expressions;
-import org.apache.iceberg.io.CloseableIterable;
-import org.apache.iceberg.types.Types;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
 
-//@ExtendWith(ParameterizedTestExtension.class)
+// @ExtendWith(ParameterizedTestExtension.class)
 public abstract class ScanTestBase<
         ScanT extends Scan<ScanT, T, G>, T extends ScanTask, G extends ScanTaskGroup<T>>
     extends TestBase {

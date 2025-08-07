@@ -36,11 +36,7 @@ import org.apache.iceberg.Table;
 import org.apache.iceberg.TestBase;
 import org.apache.iceberg.relocated.com.google.common.collect.Sets;
 import org.apache.iceberg.util.Tasks;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+import org.mpisws.jmc.annotations.JmcCheckConfiguration;
 
 //@ExtendWith(ParameterizedTestExtension.class)
 public class TestCommitService extends TestBase {
