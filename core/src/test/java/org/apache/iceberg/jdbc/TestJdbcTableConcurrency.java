@@ -49,8 +49,8 @@ import org.apache.iceberg.relocated.com.google.common.util.concurrent.MoreExecut
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.util.Tasks;
 import org.awaitility.Awaitility;
-import org.mpisws.jmc.annotations.JmcCheck;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcCheck;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 public class TestJdbcTableConcurrency {
 

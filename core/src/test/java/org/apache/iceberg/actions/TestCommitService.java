@@ -36,7 +36,7 @@ import org.apache.iceberg.Table;
 import org.apache.iceberg.TestBase;
 import org.apache.iceberg.relocated.com.google.common.collect.Sets;
 import org.apache.iceberg.util.Tasks;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 //@ExtendWith(ParameterizedTestExtension.class)
 public class TestCommitService extends TestBase {

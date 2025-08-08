@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.mpisws.jmc.annotations.JmcCheckConfiguration;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 // @ExtendWith(ParameterizedTestExtension.class)
 public abstract class ScanTestBase<

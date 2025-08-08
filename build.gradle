@@ -392,7 +392,6 @@ project(':iceberg-core') {
     agentDependencies "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
     agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.1-SNAPSHOT"
 
-    implementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
     testImplementation "org.mpi-sws.jmc:jmc:0.1.1-SNAPSHOT"
   }
 
