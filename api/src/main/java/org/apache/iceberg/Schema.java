@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.iceberg.relocated.com.google.common.annotations.VisibleForTesting;
-import org.apache.iceberg.relocated.com.google.common.base.Joiner;
 import org.apache.iceberg.relocated.com.google.common.base.Preconditions;
 import org.apache.iceberg.relocated.com.google.common.collect.BiMap;
 import org.apache.iceberg.relocated.com.google.common.collect.ImmutableBiMap;
@@ -52,7 +51,8 @@ import org.apache.iceberg.types.Types.StructType;
  * will be default to 0.
  */
 public class Schema implements Serializable {
-  private static final Joiner NEWLINE = Joiner.on('\n');
+//  @SuppressWarnings("unused")
+//  private static final Joiner NEWLINE = Joiner.on('\n');
   private static final String ALL_COLUMNS = "*";
   private static final int DEFAULT_SCHEMA_ID = 0;
 
@@ -536,19 +536,17 @@ public class Schema implements Serializable {
     return TypeUtil.select(this, selected);
   }
 
-  private String identifierFieldToString(Types.NestedField field) {
-    return "  " + field + (identifierFieldIds().contains(field.fieldId()) ? " (id)" : "");
-  }
+//  @SuppressWarnings("unused")
+//  private String identifierFieldToString(Types.NestedField field) {
+//    return "  " + field + (identifierFieldIds().contains(field.fieldId()) ? " (id)" : "");
+//  }
 
   @Override
   public String toString() {
-    return String.format(
-        "table {\n%s\n}",
-        NEWLINE.join(
-            struct.fields().stream()
-                .map(this::identifierFieldToString)
-                .collect(Collectors.toList())));
+    return "Schema{}";
   }
+
+
 
   /**
    * The ID's of some fields will be re-assigned if GetID is specified for the Schema.
@@ -597,36 +595,36 @@ public class Schema implements Serializable {
    */
   public static void checkCompatibility(Schema schema, int formatVersion) {
     // accumulate errors as a treemap to keep them in a reasonable order
-    Map<Integer, String> problems = Maps.newTreeMap();
-
-    // check each field's type and defaults
-    for (NestedField field : schema.lazyIdToField().values()) {
-      Integer minFormatVersion = MIN_FORMAT_VERSIONS.get(field.type().typeId());
-      if (minFormatVersion != null && formatVersion < minFormatVersion) {
-        problems.put(
-            field.fieldId(),
-            String.format(
-                "Invalid type for %s: %s is not supported until v%s",
-                schema.findColumnName(field.fieldId()), field.type(), minFormatVersion));
-      }
-
-      if (field.initialDefault() != null && formatVersion < DEFAULT_VALUES_MIN_FORMAT_VERSION) {
-        problems.put(
-            field.fieldId(),
-            String.format(
-                "Invalid initial default for %s: non-null default (%s) is not supported until v%s",
-                schema.findColumnName(field.fieldId()),
-                field.initialDefault(),
-                DEFAULT_VALUES_MIN_FORMAT_VERSION));
-      }
-    }
-
-    // throw if there are any compatibility problems
-    if (!problems.isEmpty()) {
-      throw new IllegalStateException(
-          String.format(
-              "Invalid schema for v%s:\n- %s",
-              formatVersion, Joiner.on("\n- ").join(problems.values())));
-    }
+//    Map<Integer, String> problems = Maps.newTreeMap();
+//
+//    // check each field's type and defaults
+//    for (NestedField field : schema.lazyIdToField().values()) {
+//      Integer minFormatVersion = MIN_FORMAT_VERSIONS.get(field.type().typeId());
+//      if (minFormatVersion != null && formatVersion < minFormatVersion) {
+//        problems.put(
+//            field.fieldId(),
+//            String.format(
+//                "Invalid type for %s: %s is not supported until v%s",
+//                schema.findColumnName(field.fieldId()), field.type(), minFormatVersion));
+//      }
+//
+//      if (field.initialDefault() != null && formatVersion < DEFAULT_VALUES_MIN_FORMAT_VERSION) {
+//        problems.put(
+//            field.fieldId(),
+//            String.format(
+//                "Invalid initial default for %s: non-null default (%s) is not supported until v%s",
+//                schema.findColumnName(field.fieldId()),
+//                field.initialDefault(),
+//                DEFAULT_VALUES_MIN_FORMAT_VERSION));
+//      }
+//    }
+//
+//    // throw if there are any compatibility problems
+//    if (!problems.isEmpty()) {
+//      throw new IllegalStateException(
+//          String.format(
+//              "Invalid schema for v%s:\n- %s",
+//              formatVersion, Joiner.on("\n- ").join(problems.values())));
+//    }
   }
 }

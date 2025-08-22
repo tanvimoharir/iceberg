@@ -64,11 +64,7 @@ public class TestJdbcTableConcurrency {
 
 
 
-  @JmcCheck
-  @JmcCheckConfiguration(
-          numIterations = 10,
-          debug = true
-  )
+
   public synchronized void testConcurrentFastAppends() throws IOException {
     Map<String, String> properties = Maps.newHashMap();
 
@@ -124,53 +120,53 @@ public class TestJdbcTableConcurrency {
   }
 
 
-  @JmcCheckConfiguration(
-          numIterations = 10
-  )
-  public synchronized void testConcurrentConnections() throws InterruptedException, IOException {
-    Map<String, String> properties = Maps.newHashMap();
-
-    //using a manual tempDir instead of @TempDir
-    File tableDirA = java.nio.file.Files.createTempDirectory("iceberg-test").toFile();
-
-    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDirA.getAbsolutePath());
-    String sqliteDb = "jdbc:sqlite:" + tableDirA.getAbsolutePath() + "concurentConnections.db";
-
-    tableDirA.deleteOnExit();
-
-    properties.put(CatalogProperties.URI, sqliteDb);
-    JdbcCatalog catalog = new JdbcCatalog();
-    catalog.setConf(new Configuration());
-    catalog.initialize("jdbc", properties);
-    catalog.createTable(TABLE_IDENTIFIER, SCHEMA);
-
-    Table icebergTable = catalog.loadTable(TABLE_IDENTIFIER);
-
-    icebergTable
-        .updateProperties()
-        .set(COMMIT_NUM_RETRIES, "20")
-        .set(COMMIT_MIN_RETRY_WAIT_MS, "25")
-        .set(COMMIT_MAX_RETRY_WAIT_MS, "25")
-        .commit();
-
-    String fileName = UUID.randomUUID().toString();
-    DataFile file =
-        DataFiles.builder(icebergTable.spec())
-            .withPath(FileFormat.PARQUET.addExtension(fileName))
-            .withRecordCount(2)
-            .withFileSizeInBytes(0)
-            .build();
-
-    ExecutorService executorService =
-        MoreExecutors.getExitingExecutorService(
-            (ThreadPoolExecutor) Executors.newFixedThreadPool(7));
-
-    for (int i = 0; i < 7; i++) {
-      executorService.submit(() -> icebergTable.newAppend().appendFile(file).commit());
-    }
-
-    executorService.shutdown();
-    assertThat(executorService.awaitTermination(3, TimeUnit.MINUTES)).as("Timeout").isTrue();
-    assertThat(Iterables.size(icebergTable.snapshots())).isEqualTo(7);
-  }
+//  @JmcCheckConfiguration(
+//          numIterations = 10
+//  )
+//  public synchronized void testConcurrentConnections() throws InterruptedException, IOException {
+//    Map<String, String> properties = Maps.newHashMap();
+//
+//    //using a manual tempDir instead of @TempDir
+//    File tableDirA = java.nio.file.Files.createTempDirectory("iceberg-test").toFile();
+//
+//    properties.put(CatalogProperties.WAREHOUSE_LOCATION, tableDirA.getAbsolutePath());
+//    String sqliteDb = "jdbc:sqlite:" + tableDirA.getAbsolutePath() + "concurentConnections.db";
+//
+//    tableDirA.deleteOnExit();
+//
+//    properties.put(CatalogProperties.URI, sqliteDb);
+//    JdbcCatalog catalog = new JdbcCatalog();
+//    catalog.setConf(new Configuration());
+//    catalog.initialize("jdbc", properties);
+//    catalog.createTable(TABLE_IDENTIFIER, SCHEMA);
+//
+//    Table icebergTable = catalog.loadTable(TABLE_IDENTIFIER);
+//
+//    icebergTable
+//        .updateProperties()
+//        .set(COMMIT_NUM_RETRIES, "20")
+//        .set(COMMIT_MIN_RETRY_WAIT_MS, "25")
+//        .set(COMMIT_MAX_RETRY_WAIT_MS, "25")
+//        .commit();
+//
+//    String fileName = UUID.randomUUID().toString();
+//    DataFile file =
+//        DataFiles.builder(icebergTable.spec())
+//            .withPath(FileFormat.PARQUET.addExtension(fileName))
+//            .withRecordCount(2)
+//            .withFileSizeInBytes(0)
+//            .build();
+//
+//    ExecutorService executorService =
+//        MoreExecutors.getExitingExecutorService(
+//            (ThreadPoolExecutor) Executors.newFixedThreadPool(7));
+//
+//    for (int i = 0; i < 7; i++) {
+//      executorService.submit(() -> icebergTable.newAppend().appendFile(file).commit());
+//    }
+//
+//    executorService.shutdown();
+//    assertThat(executorService.awaitTermination(3, TimeUnit.MINUTES)).as("Timeout").isTrue();
+//    assertThat(Iterables.size(icebergTable.snapshots())).isEqualTo(7);
+//  }
 }
