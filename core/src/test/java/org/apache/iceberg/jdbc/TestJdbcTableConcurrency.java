@@ -61,10 +61,6 @@ public class TestJdbcTableConcurrency {
           required(2, "data", Types.StringType.get()));
 
   // @TempDir private File tableDir;
-
-
-
-
   public synchronized void testConcurrentFastAppends() throws IOException {
     Map<String, String> properties = Maps.newHashMap();
 
