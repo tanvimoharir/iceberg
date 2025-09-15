@@ -258,6 +258,8 @@ public class TestOverwriteWithValidation extends TestBase {
 
   @TestTemplate
   public void testOverwriteTableStrictValidated() {
+    this.table =
+          TestTables.create(tableDir, TABLE_NAME, DATE_SCHEMA, PARTITION_SPEC, formatVersion);
     commit(table, table.newAppend().appendFile(FILE_DAY_1).appendFile(FILE_DAY_2), branch);
 
     Snapshot baseSnapshot = latestSnapshot(table, branch);
