@@ -394,15 +394,21 @@ project(':iceberg-core') {
     testImplementation "org.mpi-sws.jmc:jmc:0.1.2"
   }
 
+  tasks.register("jmcTest", Test) {
+      useJUnitPlatform {
+          includeTags("jmc")
+      }
+      def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.2") }?.absolutePath
+      def libraryJar = configurations.agentDependencies.find { it.name.contains("jmc-0.1.2") }?.absolutePath
+
+      def agentArg = "-javaagent:$agentJar=debug,instrumentingPackages=org.apache.iceberg,excludedPackages=org.apache.iceberg.relocated,jmcRuntimeJarPath=$libraryJar"
+      jvmArgs(agentArg)
+  }
+
   tasks.withType(Test).configureEach {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-    def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.2") }?.absolutePath
-    def libraryJar = configurations.agentDependencies.find { it.name.contains("jmc-0.1.2") }?.absolutePath
-
-    def agentArg = "-javaagent:$agentJar=debug,instrumentingPackages=org.apache.iceberg,excludedPackages=org.apache.iceberg.relocated,jmcRuntimeJarPath=$libraryJar"
-    jvmArgs(agentArg)
-
+      useJUnitPlatform {
+          excludeTags("jmc")
+      }
   }
 }
 
