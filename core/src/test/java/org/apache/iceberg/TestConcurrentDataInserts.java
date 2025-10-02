@@ -38,11 +38,14 @@ import org.apache.iceberg.io.OutputFile;
 import org.apache.iceberg.types.Types;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mpi_sws.jmc.annotations.JmcCheck;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class TestConcurrentDataInserts {
-    @Test
+    @JmcCheck
+    @JmcCheckConfiguration(numIterations = 10)
     public void testConcurrentDataInserts() throws IOException, ExecutionException, InterruptedException {
         // 1. Create a parent temp directory manually
         File parentDir = new File(System.getProperty("java.io.tmpdir"),
@@ -50,6 +53,9 @@ public class TestConcurrentDataInserts {
         if (!parentDir.mkdirs()) {
             throw new IOException("Failed to create parent temp directory: " + parentDir);
         }
+
+        // Unique table name as well
+        String tableName = "test_table_concurrent_jmc_" + System.nanoTime();
 
         try{
 
@@ -63,14 +69,14 @@ public class TestConcurrentDataInserts {
 
             TestTables.TestTable testTable = TestTables.create(
                     parentDir,
-                    "test_table_concurrent",
+                    tableName,
                     schema,
                     spec,
                     2
             );
 
             // 2. Capture initial metadata
-            TableMetadata metadataBefore = TestTables.readMetadata("test_table_concurrent");
+            TableMetadata metadataBefore = TestTables.readMetadata(tableName);
             int snapshotCountBefore = metadataBefore.snapshots().size();
 
 
@@ -106,7 +112,7 @@ public class TestConcurrentDataInserts {
             executor.shutdown();
 
             // 7. Read final metadata and validate
-            TableMetadata finalMetadata = TestTables.readMetadata("test_table_concurrent");
+            TableMetadata finalMetadata = TestTables.readMetadata(tableName);
             int snapshotCountAfter = finalMetadata.snapshots().size();
 
             // Snapshot count grew by one
