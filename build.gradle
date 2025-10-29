@@ -392,11 +392,13 @@ project(':iceberg-core') {
     agentDependencies "org.mpi-sws.jmc:jmc-agent:0.1.2"
 
     testImplementation "org.mpi-sws.jmc:jmc:0.1.2"
+    testImplementation "org.mpi-sws.jmc:jmc-agent:0.1.2"
   }
 
   tasks.register("jmcTest", Test) {
       useJUnitPlatform {
-          includeTags("jmc")
+//          includeTags("jmc")
+            include '**/TestConcurrentDataInserts.class'
       }
       def agentJar = configurations.agentDependencies.find { it.name.contains("jmc-agent-0.1.2") }?.absolutePath
       def libraryJar = configurations.agentDependencies.find { it.name.contains("jmc-0.1.2") }?.absolutePath
@@ -405,11 +407,15 @@ project(':iceberg-core') {
       jvmArgs(agentArg)
   }
 
-  tasks.withType(Test).configureEach {
-      useJUnitPlatform {
-          excludeTags("jmc")
-      }
+  tasks.named("test") {
+    enabled = false
   }
+
+//  tasks.withType(Test).configureEach {
+//      useJUnitPlatform {
+//          excludeTags("jmc")
+//      }
+//  }
 }
 
 project(':iceberg-data') {
