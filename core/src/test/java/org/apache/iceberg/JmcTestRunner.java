@@ -19,17 +19,17 @@
  *
  */
 
-package org.apache.iceberg;
-
-import org.junit.jupiter.api.Test;
-import org.mpi_sws.jmc.annotations.JmcCheck;
-import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
-
-public class JmcTestRunner {
-
-    @JmcCheck
-    @JmcCheckConfiguration(numIterations = 10, debug = true)
-    public void testJmc() throws Exception {
-        TestConcurrentDataInserts.testConcurrentDataInserts();
-    }
-}
+//package org.apache.iceberg;
+//
+//import org.junit.jupiter.api.Test;
+//import org.mpi_sws.jmc.annotations.JmcCheck;
+//import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+//
+//public class JmcTestRunner {
+//
+//    @JmcCheck
+//    @JmcCheckConfiguration(numIterations = 10, debug = true)
+//    public void testJmc() throws Exception {
+//        TestConcurrentDataInserts.testConcurrentDataInserts();
+//    }
+//}

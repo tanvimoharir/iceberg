@@ -321,11 +321,15 @@ public class TestTables {
       if (base != current) {
         throw new CommitFailedException("Cannot commit changes based on stale metadata");
       }
+      System.out.println(Thread.currentThread().getName() + ": trying to commit, base=" + base);
       synchronized (METADATA) {
+        System.out.println(Thread.currentThread().getName() + ": acquired METADATA lock, base=" + base);
         refresh();
         if (base == current) {
+          System.out.println(Thread.currentThread().getName() + ": committing changes...");
           if (failCommits > 0) {
             this.failCommits -= 1;
+            System.out.println(Thread.currentThread().getName() + ": injected failure, throwing exception");
             throw new CommitFailedException("Injected failure");
           }
           Integer version = VERSIONS.get(tableName);
@@ -337,11 +341,14 @@ public class TestTables {
                   .build();
           VERSIONS.put(tableName, version == null ? 0 : version + 1);
           METADATA.put(tableName, current);
+          System.out.println(Thread.currentThread().getName() + ": commit finished, version=" + VERSIONS.get(tableName));
         } else {
+          System.out.println(Thread.currentThread().getName() + ": stale commit, throwing exception");
           throw new CommitFailedException(
               "Commit failed: table was updated at %d", current.lastUpdatedMillis());
         }
       }
+      System.out.println(Thread.currentThread().getName() + ": exited METADATA lock");
     }
 
     @Override
