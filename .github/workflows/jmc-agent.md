@@ -182,3 +182,4 @@ steps:
         ./*/src/main/java/ 2>/dev/null \
         | grep -v "test\|Test" | head -30 > /tmp/executors.txt || true
       echo "--- executors ---" && cat /tmp/executors.txt
+---
