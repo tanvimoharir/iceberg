@@ -1,100 +1,4 @@
 ---
-description: |
-  JMC Agent: an agentic workflow that applies JMC (Java Model Checker) systematic
-  concurrency testing to a Java codebase. Scans for concurrency-relevant code,
-  generates @JmcCheck test classes, and opens PRs with the results.
-
-  JMC is a systematic concurrency testing tool that explores thread interleavings to
-  find race conditions, atomicity violations, and concurrency bugs. It works via
-  bytecode instrumentation — no source annotation of the target code is needed.
-
-  ## Phases
-
-  1. **Research** — scan the codebase for concurrency-relevant code and produce
-     `jmc-testing/RESEARCH.md` documenting findings and `jmc-testing/TARGETS.md`
-     with prioritized targets. For each target, document:
-     - The class/method and file path
-     - What shared state is involved
-     - What concurrent scenario to test (which operations race)
-     - What correctness property to assert
-     - Estimated complexity (number of threads, shared variables, operations)
-
-  2. **Test Generation** — for each target in TARGETS.md, write a JMC test class.
-     ALWAYS use the `random` strategy. Open a PR with the generated tests.
-
-  ## JMC Test Pattern
-
-  Every generated test MUST follow this exact pattern:
-
-  ```java
-  package org.mpi_sws.jmc.iceberg.<category>;
-
-  import org.mpi_sws.jmc.annotations.JmcCheck;
-  import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
-  import static org.junit.jupiter.api.Assertions.*;
-  // ... other imports
-
-  public class <DescriptiveName>Jmc {
-
-      @JmcCheck
-      @JmcCheckConfiguration(numIterations = 100, strategy = "random", debug = false)
-      public void test<ScenarioName>() throws Exception {
-          // 1. Setup: Create InMemoryCatalog + table with schema
-          // 2. Prepare: Create data/delete files or operations
-          // 3. Race: Use ExecutorService with 2 threads to run concurrent operations
-          // 4. Verify: Assert consistency properties on final state
-      }
-  }
-  ```
-
-  ## Rules
-
-  1. ALWAYS use `strategy = "random"` — no other strategies
-  2. ALWAYS use `numIterations = 100` (or up to 500 for critical targets)
-  3. ALWAYS use `InMemoryCatalog` — no external dependencies, no containers
-  4. ALWAYS use `ExecutorService executor = Executors.newFixedThreadPool(2)` for concurrency
-  5. ALWAYS use `Future<>` to wait for thread completion
-  6. ALWAYS catch exceptions per-thread with AtomicInteger/AtomicBoolean for tracking
-  7. ALWAYS call `table.refresh()` before reading final state
-  8. ALWAYS assert a PROPERTY (set of valid final states) not a specific outcome
-  9. Package: `org.mpi_sws.jmc.iceberg.targeted` for bug-hunting,
-     `org.mpi_sws.jmc.iceberg.infrastructure` for infra tests,
-     `org.mpi_sws.jmc.iceberg.issues` for known GitHub issue tests
-  10. File naming: `<DescriptiveName>Jmc.java`
-  11. NO modifications to target source code — tests only
-  12. Do NOT duplicate existing tests — check existing files first
-
-  ## What to Scan For
-
-  High priority:
-  - commit() methods with retry loops or CAS — concurrent commit races
-  - synchronized blocks protecting shared state
-  - volatile fields used for coordination
-  - AtomicReference.compareAndSet() — ABA problems, lost updates
-  - Thread pools / ExecutorService — task coordination races
-  - Double-checked locking — initialization races
-
-  Medium priority:
-  - ReentrantLock / ReadWriteLock usage
-  - ConcurrentHashMap compound operations (check-then-act)
-  - Lazy initialization of shared state
-  - Cache invalidation / refresh logic
-  - Connection pool management
-
-  ## Dependencies Available
-
-  - org.apache.iceberg:iceberg-core (InMemoryCatalog, Table, Schema, etc.)
-  - org.apache.iceberg:iceberg-data (GenericRecord, GenericAppenderFactory, IcebergGenerics)
-  - org.mpi-sws.jmc:jmc (JmcCheck, JmcCheckConfiguration)
-  - org.junit.jupiter:junit-jupiter (assertions)
-
-  ## Existing Tests (study for style)
-
-  These files in `iceberg-integration/src/test/java/` show the exact patterns to follow:
-  - `org/mpi_sws/jmc/iceberg/IcebergRowDeltaConflictJmc.java`
-  - `org/mpi_sws/jmc/iceberg/targeted/SchemaEvolutionRaceJmc.java`
-  - `org/mpi_sws/jmc/iceberg/infrastructure/TasksStopOnFailureJmc.java`
-
 on:
   schedule:
     - cron: '0 */12 * * *'
@@ -127,22 +31,22 @@ safe-outputs:
     run-success: "✓ {workflow_name} completed, see [workflow run]({run_url})."
     run-failure: "✗ {workflow_name} encountered {status}, see [workflow run]({run_url})."
   create-issue:
-    title-prefix: "[JMC Squad] "
-    labels: [automation, jmc-squad, concurrency]
+    title-prefix: "[JMC Agent] "
+    labels: [automation, jmc-agent, concurrency]
     max: 3
   update-issue:
     target: "*"
-    title-prefix: "[JMC Squad] "
+    title-prefix: "[JMC Agent] "
     max: 1
   create-pull-request:
-    title-prefix: "[JMC Squad] "
-    labels: [automation, jmc-squad, concurrency]
+    title-prefix: "[JMC Agent] "
+    labels: [automation, jmc-agent, concurrency]
     max: 2
     protected-files: allowed
     draft: false
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[JMC Squad] "
+    title-prefix: "[JMC Agent] "
     protected-files: allowed
     max: 4
   add-comment:
@@ -156,30 +60,116 @@ steps:
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
-      echo "=== JMC Squad ==="
-
+      echo "=== JMC Agent ==="
       find . -name "*Jmc.java" -path "*/test/*" 2>/dev/null > /tmp/existing_tests.txt
       echo "Existing JMC tests: $(wc -l < /tmp/existing_tests.txt)"
       cat /tmp/existing_tests.txt
-
       [ -f "jmc-testing/RESEARCH.md" ] && echo "RESEARCH: exists" || echo "RESEARCH: missing"
       [ -f "jmc-testing/TARGETS.md" ] && echo "TARGETS: exists" || echo "TARGETS: missing"
 
   - name: Scan for concurrency targets
     run: |
       echo "=== Concurrency scan ==="
-
-      grep -rn "void commit\|\.commit(" ./*/src/main/java/ 2>/dev/null \
-        | grep -v "test\|Test" | head -50 > /tmp/commits.txt || true
+      grep -rn "void commit\|\.commit(" ./*/src/main/java/ 2>/dev/null | grep -v "test\|Test" | head -50 > /tmp/commits.txt || true
       echo "--- commit() methods ---" && cat /tmp/commits.txt
-
-      grep -rn "synchronized\|volatile \|AtomicReference\|AtomicInteger\|compareAndSet" \
-        ./*/src/main/java/ 2>/dev/null \
-        | grep -v "test\|Test" | head -50 > /tmp/sync.txt || true
+      grep -rn "synchronized\|volatile \|AtomicReference\|AtomicInteger\|compareAndSet" ./*/src/main/java/ 2>/dev/null | grep -v "test\|Test" | head -50 > /tmp/sync.txt || true
       echo "--- sync/atomic ---" && cat /tmp/sync.txt
-
-      grep -rn "ExecutorService\|ThreadPoolExecutor\|Executors\." \
-        ./*/src/main/java/ 2>/dev/null \
-        | grep -v "test\|Test" | head -30 > /tmp/executors.txt || true
+      grep -rn "ExecutorService\|ThreadPoolExecutor\|Executors\." ./*/src/main/java/ 2>/dev/null | grep -v "test\|Test" | head -30 > /tmp/executors.txt || true
       echo "--- executors ---" && cat /tmp/executors.txt
 ---
+
+# JMC Agent
+
+JMC Agent: an agentic workflow that applies JMC (Java Model Checker) systematic
+concurrency testing to a Java codebase. Scans for concurrency-relevant code,
+generates @JmcCheck test classes, and opens PRs with the results.
+
+JMC is a systematic concurrency testing tool that explores thread interleavings to
+find race conditions, atomicity violations, and concurrency bugs. It works via
+bytecode instrumentation — no source annotation of the target code is needed.
+
+## Phases
+
+1. **Research** — scan the codebase for concurrency-relevant code and produce
+   `jmc-testing/RESEARCH.md` documenting findings and `jmc-testing/TARGETS.md`
+   with prioritized targets. For each target, document:
+   - The class/method and file path
+   - What shared state is involved
+   - What concurrent scenario to test (which operations race)
+   - What correctness property to assert
+   - Estimated complexity (number of threads, shared variables, operations)
+
+2. **Test Generation** — for each target in TARGETS.md, write a JMC test class.
+   ALWAYS use the `random` strategy. Open a PR with the generated tests.
+
+## JMC Test Pattern
+
+Every generated test MUST follow this exact pattern:
+
+```java
+package org.mpi_sws.jmc.iceberg.<category>;
+
+import org.mpi_sws.jmc.annotations.JmcCheck;
+import org.mpi_sws.jmc.annotations.JmcCheckConfiguration;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class <DescriptiveName>Jmc {
+
+    @JmcCheck
+    @JmcCheckConfiguration(numIterations = 100, strategy = "random", debug = false)
+    public void test<ScenarioName>() throws Exception {
+        // 1. Setup: Create InMemoryCatalog + table with schema
+        // 2. Prepare: Create data/delete files or operations
+        // 3. Race: Use ExecutorService with 2 threads to run concurrent operations
+        // 4. Verify: Assert consistency properties on final state
+    }
+}
+```
+
+## Rules
+
+1. ALWAYS use `strategy = "random"` — no other strategies
+2. ALWAYS use `numIterations = 100` (or up to 500 for critical targets)
+3. ALWAYS use `InMemoryCatalog` — no external dependencies, no containers
+4. ALWAYS use `ExecutorService executor = Executors.newFixedThreadPool(2)` for concurrency
+5. ALWAYS use `Future<>` to wait for thread completion
+6. ALWAYS catch exceptions per-thread with AtomicInteger/AtomicBoolean for tracking
+7. ALWAYS call `table.refresh()` before reading final state
+8. ALWAYS assert a PROPERTY (set of valid final states) not a specific outcome
+9. Package: `org.mpi_sws.jmc.iceberg.targeted` for bug-hunting,
+   `org.mpi_sws.jmc.iceberg.infrastructure` for infra tests,
+   `org.mpi_sws.jmc.iceberg.issues` for known GitHub issue tests
+10. File naming: `<DescriptiveName>Jmc.java`
+11. NO modifications to target source code — tests only
+12. Do NOT duplicate existing tests — check existing files first
+
+## What to Scan For
+
+High priority:
+- commit() methods with retry loops or CAS — concurrent commit races
+- synchronized blocks protecting shared state
+- volatile fields used for coordination
+- AtomicReference.compareAndSet() — ABA problems, lost updates
+- Thread pools / ExecutorService — task coordination races
+- Double-checked locking — initialization races
+
+Medium priority:
+- ReentrantLock / ReadWriteLock usage
+- ConcurrentHashMap compound operations (check-then-act)
+- Lazy initialization of shared state
+- Cache invalidation / refresh logic
+- Connection pool management
+
+## Dependencies Available
+
+- org.apache.iceberg:iceberg-core (InMemoryCatalog, Table, Schema, etc.)
+- org.apache.iceberg:iceberg-data (GenericRecord, GenericAppenderFactory, IcebergGenerics)
+- org.mpi-sws.jmc:jmc (JmcCheck, JmcCheckConfiguration)
+- org.junit.jupiter:junit-jupiter (assertions)
+
+## Existing Tests (study for style)
+
+These files in `iceberg-integration/src/test/java/` show the exact patterns to follow:
+- `org/mpi_sws/jmc/iceberg/IcebergRowDeltaConflictJmc.java`
+- `org/mpi_sws/jmc/iceberg/targeted/SchemaEvolutionRaceJmc.java`
+- `org/mpi_sws/jmc/iceberg/infrastructure/TasksStopOnFailureJmc.java`
