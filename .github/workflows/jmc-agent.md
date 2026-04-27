@@ -66,6 +66,7 @@ steps:
       cat /tmp/existing_tests.txt
       [ -f "jmc-testing/RESEARCH.md" ] && echo "RESEARCH: exists" || echo "RESEARCH: missing"
       [ -f "jmc-testing/TARGETS.md" ] && echo "TARGETS: exists" || echo "TARGETS: missing"
+      [ -f "jmc-testing/RESULTS.md" ] && echo "RESULTS: exists" || echo "RESULTS: missing"
 
   - name: Scan for concurrency targets
     run: |
@@ -80,27 +81,60 @@ steps:
 
 # JMC Agent
 
-JMC Agent: an agentic workflow that applies JMC (Java Model Checker) systematic
-concurrency testing to a Java codebase. Scans for concurrency-relevant code,
-generates @JmcCheck test classes, and opens PRs with the results.
+An agentic workflow that applies JMC (Java Model Checker) systematic concurrency
+testing to a Java codebase. Scans for concurrency-relevant code, generates
+@JmcCheck test classes, runs them, and reports results.
 
-JMC is a systematic concurrency testing tool that explores thread interleavings to
-find race conditions, atomicity violations, and concurrency bugs. It works via
-bytecode instrumentation — no source annotation of the target code is needed.
+JMC explores thread interleavings to find race conditions, atomicity violations,
+and concurrency bugs via bytecode instrumentation — no source annotation needed.
 
-## Phases
+## Pipeline (follow this order strictly)
 
-1. **Research** — scan the codebase for concurrency-relevant code and produce
-   `jmc-testing/RESEARCH.md` documenting findings and `jmc-testing/TARGETS.md`
-   with prioritized targets. For each target, document:
-   - The class/method and file path
-   - What shared state is involved
-   - What concurrent scenario to test (which operations race)
-   - What correctness property to assert
-   - Estimated complexity (number of threads, shared variables, operations)
+### Phase 1: Research (identify exactly 6 targets)
 
-2. **Test Generation** — for each target in TARGETS.md, write a JMC test class.
-   ALWAYS use the `random` strategy. Open a PR with the generated tests.
+Scan the codebase for concurrency-relevant code. Identify exactly **6** targets.
+For each target produce an entry in `jmc-testing/TARGETS.md` with:
+- Class/method and file path
+- Shared state involved
+- Concurrent scenario (which operations race)
+- Correctness property to assert
+- Complexity estimate (threads, shared variables, operations)
+
+Also produce `jmc-testing/RESEARCH.md` with the full scan findings.
+
+### Phase 2: Test Generation
+
+For each of the 6 targets, write a JMC test class following the pattern below.
+Place tests in `iceberg-integration/src/test/java/org/mpi_sws/jmc/iceberg/`.
+
+### Phase 3: Execution — Run 1 (100 iterations)
+
+Run each generated test with `numIterations = 100` using the random strategy.
+Record the result (pass/fail, any assertion errors, exception traces) for each test.
+
+- If ANY test fails: **stop here**. Record the failure details and skip Run 2.
+- If ALL tests pass: proceed to Run 2.
+
+### Phase 4: Execution — Run 2 (1000 iterations)
+
+Re-run all 6 tests again with **1000 iterations** (different random seed).
+Record results.
+
+### Phase 5: Results Report
+
+**BEFORE creating any PR**, write `jmc-testing/RESULTS.md` containing:
+- Date and run ID
+- For each of the 6 targets:
+  - Test class name
+  - Run 1 result: PASS or FAIL (with details if failed)
+  - Run 2 result (1000 iterations): PASS, FAIL, or SKIPPED (if Run 1 failed)
+  - Any exceptions or assertion violations observed
+- Summary: X/6 passed both runs, Y/6 failed
+
+**Commit this file to the branch FIRST** before attempting PR creation.
+This ensures results are preserved on the branch even if PR creation fails.
+
+Then open a PR with all generated files (tests, RESEARCH.md, TARGETS.md, RESULTS.md).
 
 ## JMC Test Pattern
 
@@ -129,19 +163,18 @@ public class <DescriptiveName>Jmc {
 ## Rules
 
 1. ALWAYS use `strategy = "random"` — no other strategies
-2. ALWAYS use `numIterations = 100` (or up to 500 for critical targets)
+2. ALWAYS use `numIterations = 100`
 3. ALWAYS use `InMemoryCatalog` — no external dependencies, no containers
-4. ALWAYS use `ExecutorService executor = Executors.newFixedThreadPool(2)` for concurrency
+4. ALWAYS use `ExecutorService executor = Executors.newFixedThreadPool(2)`
 5. ALWAYS use `Future<>` to wait for thread completion
-6. ALWAYS catch exceptions per-thread with AtomicInteger/AtomicBoolean for tracking
+6. ALWAYS catch exceptions per-thread with AtomicInteger/AtomicBoolean
 7. ALWAYS call `table.refresh()` before reading final state
 8. ALWAYS assert a PROPERTY (set of valid final states) not a specific outcome
-9. Package: `org.mpi_sws.jmc.iceberg.targeted` for bug-hunting,
-   `org.mpi_sws.jmc.iceberg.infrastructure` for infra tests,
-   `org.mpi_sws.jmc.iceberg.issues` for known GitHub issue tests
+9. Identify exactly **6** targets — no more, no less
 10. File naming: `<DescriptiveName>Jmc.java`
 11. NO modifications to target source code — tests only
 12. Do NOT duplicate existing tests — check existing files first
+13. ALWAYS write RESULTS.md and commit it BEFORE attempting PR creation
 
 ## What to Scan For
 
@@ -158,7 +191,6 @@ Medium priority:
 - ConcurrentHashMap compound operations (check-then-act)
 - Lazy initialization of shared state
 - Cache invalidation / refresh logic
-- Connection pool management
 
 ## Dependencies Available
 
@@ -169,7 +201,7 @@ Medium priority:
 
 ## Existing Tests (study for style)
 
-These files in `iceberg-integration/src/test/java/` show the exact patterns to follow:
+These files in `iceberg-integration/src/test/java/` show the exact patterns:
 - `org/mpi_sws/jmc/iceberg/IcebergRowDeltaConflictJmc.java`
 - `org/mpi_sws/jmc/iceberg/targeted/SchemaEvolutionRaceJmc.java`
 - `org/mpi_sws/jmc/iceberg/infrastructure/TasksStopOnFailureJmc.java`
