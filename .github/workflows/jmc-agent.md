@@ -1,4 +1,7 @@
 ---
+engine:
+  id: claude
+
 on:
   schedule:
     - cron: '0 */12 * * *'
